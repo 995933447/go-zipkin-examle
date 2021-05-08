@@ -32,20 +32,24 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	// span可以指定种类,当前当前跨度场景,如CLIENT, SERVER, PRODUCER, CONSUMER等
 	span := tracer.StartSpan("cli-request", zipkin.Kind(model.Client))
-	defer span.Finish()
+	defer span.Flush()
 
 	request, err := http.NewRequest(http.MethodGet, "http://localhost:1501/", nil)
 	if err != nil {
 		span.Tag(string(zipkin.TagError), err.Error())
 	}
 
+	// 将当前spanContext注入到http请求头中,完成span在同一链路中的传递
 	err = b3.InjectHTTP(request)(span.Context())
 	if err != nil {
 		span.Tag(string(zipkin.TagError), err.Error())
 		log.Fatalln(err)
 	}
+
 	fmt.Println(request.Header)
+
 	client := &http.Client{}
 	resp, err := client.Do(request)
 	if err != nil {
@@ -54,8 +58,10 @@ func main() {
 	}
 
 	childSpan, _ := tracer.StartSpanFromContext(zipkin.NewContext(context.Background(), span), "cli-resp")
-	defer childSpan.Finish()
+	defer childSpan.Flush()
+
 	childSpan.Tag(string(zipkin.TagHTTPStatusCode), strconv.Itoa(resp.StatusCode))
 	content, err := ioutil.ReadAll(resp.Body)
+
 	fmt.Println(string(content))
 }
