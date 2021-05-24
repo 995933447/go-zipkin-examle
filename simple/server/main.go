@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 	"trace/common"
 )
@@ -16,7 +17,8 @@ func main() {
 	reporter := httpReporter.NewReporter(common.ZipkinHttpReportHost)
 	defer reporter.Close()
 
-	endpoint, err := zipkin.NewEndpoint("test-server", "localhost:0501")
+	hostPort, _ := os.Hostname()
+	endpoint, err := zipkin.NewEndpoint("test-server", hostPort)
 	if err != nil {
 		log.Fatalln(err)
 	}

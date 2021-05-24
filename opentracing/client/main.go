@@ -35,7 +35,6 @@ func main() {
 	globalTracer := opentrcingZipkinImpl.Wrap(tracer)
 	opentracing.SetGlobalTracer(globalTracer)
 
-	// span可以指定种类,当前当前跨度场景,如CLIENT, SERVER, PRODUCER, CONSUMER等
 	span := opentracing.StartSpan("cli-request")
 	defer span.Finish()
 
@@ -48,8 +47,9 @@ func main() {
 	err = opentracing.GlobalTracer().Inject(
 		span.Context(),
 		opentracing.HTTPHeaders,
-		opentracing.HTTPHeadersCarrier(request.Header))
-		)
+		opentracing.HTTPHeadersCarrier(request.Header),
+	)
+
 	fmt.Println(request.Header)
 
 	if err != nil {

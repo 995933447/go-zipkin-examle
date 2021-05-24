@@ -20,6 +20,7 @@ func main()  {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 	tracer, err := zipkin.NewTracer(
 		reporter,
 		zipkin.WithSampler(zipkin.AlwaysSample),
@@ -28,6 +29,7 @@ func main()  {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 	globalTracer := opentrcingZipkinImpl.Wrap(tracer)
 	opentracing.SetGlobalTracer(globalTracer)
 
@@ -41,11 +43,13 @@ func main()  {
 			span = opentracing.StartSpan("test-opentrace-server")
 		}
 		defer span.Finish()
+
 		span.SetTag("db-mysql", "localhost:3306")
 		time.Sleep(time.Millisecond * 5)
 		span.LogFields(opentracingLog.Int64("query-start", time.Now().Unix()))
 		time.Sleep(time.Duration(rand.Intn(3)))
 		span.LogFields(opentracingLog.Int64("query-end", time.Now().Unix()))
+
 		span.LogFields(opentracingLog.Error(errors.New("Msql query failed.")))
 		span.SetTag("error", "Msql query failed tag.")
 		context.String(200, "Ok.")
